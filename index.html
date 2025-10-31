@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ტექსტების სწრაფი ბუფერი</title>
+    <title>საჯარო ტექსტური ბუფერი</title>
     <!-- Tailwind CSS-ის ჩატვირთვა -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter ფონტის კონფიგურაცია -->
@@ -31,14 +31,14 @@
     <div id="app" class="w-full max-w-xl bg-white shadow-2xl rounded-xl p-6 md:p-8 space-y-6">
 
         <h1 class="text-3xl font-extrabold text-gray-900 text-center border-b pb-3 mb-4">
-            სწრაფი ტექსტური ბუფერი <span class="text-indigo-600">Lite</span>
+            საჯარო ტექსტური ბუფერი <span class="text-red-600">SHARED</span>
         </h1>
         <p class="text-sm text-center text-gray-500">
-            შეინახეთ ტექსტი და დააკოპირეთ ის ნებისმიერ მოწყობილობაზე ერთი ღილაკით.
+            შეინახეთ ტექსტი და დააკოპირეთ ის. ნებისმიერ მომხმარებელს შეუძლია ნახოს და წაშალოს ეს მონაცემები.
         </p>
 
         <!-- ავთენტიფიკაციის სტატუსი -->
-        <div id="auth-status" class="text-center text-xs p-2 rounded-lg bg-indigo-50 text-indigo-700">
+        <div id="auth-status" class="text-center text-xs p-2 rounded-lg bg-red-50 text-red-700">
             <span id="loading-message">ავთენტიფიკაცია... გთხოვთ დაელოდოთ.</span>
             <span id="user-id" class="hidden font-mono break-all"></span>
         </div>
@@ -47,20 +47,20 @@
         <div class="space-y-4">
             <textarea id="snippet-input"
                       class="w-full p-4 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 resize-y min-h-[100px]"
-                      placeholder="ჩაწერეთ ტექსტი, რომლის შენახვაც გსურთ..."></textarea>
+                      placeholder="ჩაწერეთ ტექსტი, რომლის გაზიარებაც გსურთ..."></textarea>
             <button id="save-button"
-                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-150 ease-in-out shadow-lg disabled:opacity-50"
+                    class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-150 ease-in-out shadow-lg disabled:opacity-50"
                     disabled>
-                <span id="save-text">შენახვა</span>
+                <span id="save-text">გაზიარება</span>
             </button>
         </div>
 
         <!-- შენახული ტექსტების სია -->
-        <h2 class="text-xl font-bold text-gray-800 pt-4 border-t mt-6">შენახული ფრაგმენტები</h2>
+        <h2 class="text-xl font-bold text-gray-800 pt-4 border-t mt-6">საჯარო ფრაგმენტები</h2>
         <div id="snippets-list" class="space-y-3 max-h-96 overflow-y-auto snippet-list p-1">
             <!-- ფრაგმენტები აქ ჩაიტვირთება -->
             <p id="empty-state" class="text-center text-gray-500 py-8 hidden">
-                ჯერ არცერთი ფრაგმენტი არ გაქვთ შენახული.
+                ჯერ არცერთი ფრაგმენტი არ არის გაზიარებული.
             </p>
         </div>
 
@@ -69,7 +69,7 @@
             <div class="bg-white rounded-lg p-6 max-w-sm w-full shadow-2xl space-y-4">
                 <h3 class="text-lg font-bold text-gray-900" id="modal-title"></h3>
                 <p id="modal-content" class="text-sm text-gray-600"></p>
-                <button id="modal-close" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-lg">
+                <button id="modal-close" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg">
                     დახურვა
                 </button>
             </div>
@@ -89,7 +89,6 @@
 
         // ### გლობალური ცვლადების ინიციალიზაცია (აუცილებელია) ###
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        // თქვენ მიერ მოწოდებული კონფიგურაცია
         const externalFirebaseConfig = {
             apiKey: "AIzaSyDgO1yi3zsDTmacCh4uxAITgVV9hVhYbuw",
             authDomain: "fixfix-2498d.firebaseapp.com",
@@ -100,14 +99,12 @@
             appId: "1:271022955360:web:8b9661ee6f12537f1fdc05",
             measurementId: "G-1988ETT3D4"
         };
-        // ვიყენებთ გლობალურ კონფიგურაციას, თუ ხელმისაწვდომია, წინააღმდეგ შემთხვევაში - გარე კონფიგურაციას.
         const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : JSON.stringify(externalFirebaseConfig));
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db, auth, userId = null;
 
         // DOM ელემენტები
-        const authStatusEl = document.getElementById('auth-status');
         const userIdEl = document.getElementById('user-id');
         const loadingMessageEl = document.getElementById('loading-message');
         const snippetInput = document.getElementById('snippet-input');
@@ -138,29 +135,22 @@
             db = getFirestore(app);
             auth = getAuth(app);
             
-            // ### ავთენტიფიკაცია (ანონიმური შესვლა) ###
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    // მომხმარებელი შესულია
                     userId = user.uid;
                     loadingMessageEl.classList.add('hidden');
                     
-                    // Firebase Security Rules:
-                    // allow read, write: if request.auth != null && request.auth.uid == userId;
-                    
+                    // აჩვენებს მომხმარებლის ID-ს (მულტი-მომხმარებლიანი აპებისთვის სავალდებულოა)
                     userIdEl.textContent = `თქვენი ID (საიდენტიფიკაციო): ${userId}`;
                     userIdEl.classList.remove('hidden');
                     saveButton.disabled = false;
                     
-                    // Firestore-ის მოსმენის დაწყება
                     setupFirestoreListener();
                 } else {
-                    // მომხმარებელი არ არის შესული, ანონიმური შესვლის მცდელობა
                     try {
                         if (initialAuthToken) {
                             await signInWithCustomToken(auth, initialAuthToken);
                         } else {
-                            // ანონიმური შესვლა, თუ Canvas-ის ავთენტ. ტოკენი არ არის
                             await signInAnonymously(auth);
                         }
                     } catch (error) {
@@ -180,27 +170,25 @@
         const setupFirestoreListener = () => {
             if (!db || !userId) return;
 
-            // კოლექციის მისამართი: /artifacts/{appId}/users/{userId}/snippets
-            const collectionPath = `artifacts/${appId}/users/${userId}/snippets`;
+            // ### კოლექციის მისამართი შეიცვალა საჯაროზე! ###
+            // ახალი საჯარო მისამართი: /artifacts/{appId}/public/data/snippets
+            const collectionPath = `artifacts/${appId}/public/data/snippets`;
             const snippetsRef = collection(db, collectionPath);
             const q = query(snippetsRef); 
 
-            // რეალთაიმ მონაცემების მიღება
             onSnapshot(q, (snapshot) => {
                 const snippets = [];
                 snapshot.forEach(doc => {
                     snippets.push({ id: doc.id, ...doc.data() });
                 });
                 
-                // დახარისხება დროის მიხედვით (უახლესი ზემოთ)
                 snippets.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
 
                 renderSnippets(snippets);
             }, (error) => {
                 console.error("Firestore-ის მოსმენის შეცდომა:", error);
-                // "Permission Denied" შეცდომა ხშირად აქ ჩანს, თუ წესები არასწორია.
                 if (error.code === "permission-denied") {
-                    showModal("წვდომა აკრძალულია (Permission Denied)", "ვერ მოხერხდა მონაცემების ჩატვირთვა. გთხოვთ, დარწმუნდეთ, რომ Firestore-ის უსაფრთხოების წესები სწორად არის გამოქვეყნებული.");
+                    showModal("წვდომა აკრძალულია (Permission Denied)", "ვერ მოხერხდა მონაცემების ჩატვირთვა. გთხოვთ, გამოაქვეყნოთ **საჯარო** Firestore-ის უსაფრთხოების წესები.");
                 } else {
                     showModal("მონაცემთა შეცდომა", "ვერ მოხერხდა ფრაგმენტების ჩატვირთვა რეალურ დროში.");
                 }
@@ -219,25 +207,28 @@
                 saveButton.textContent = "ინახება...";
                 saveButton.disabled = true;
 
-                const collectionPath = `artifacts/${appId}/users/${userId}/snippets`;
+                // ### შენახვა საჯარო კოლექციაში ###
+                const collectionPath = `artifacts/${appId}/public/data/snippets`;
                 
                 await addDoc(collection(db, collectionPath), {
                     text: text,
-                    createdAt: serverTimestamp() 
+                    createdAt: serverTimestamp(),
+                    // შევინახოთ userId როგორც ინფორმაცია, ვინ ატვირთა
+                    uploadedBy: userId, 
                 });
 
-                snippetInput.value = ''; // ველის გასუფთავება
-                showModal("წარმატება", "ტექსტი წარმატებით შეინახა!");
+                snippetInput.value = '';
+                showModal("წარმატება", "ტექსტი წარმატებით გაზიარდა!");
 
             } catch (error) {
                 console.error("ტექსტის შენახვის შეცდომა:", error);
                 if (error.code === "permission-denied") {
-                    showModal("წვდომა აკრძალულია (Permission Denied)", "ვერ მოხერხდა შენახვა. გთხოვთ, შეამოწმოთ Firestore-ის წესები.");
+                    showModal("წვდომა აკრძალულია (Permission Denied)", "ვერ მოხერხდა შენახვა. გთხოვთ, შეამოწმოთ **საჯარო** Firestore-ის წესები.");
                 } else {
                     showModal("შენახვის შეცდომა", `ტექსტის შენახვა ვერ მოხერხდა: ${error.message}`);
                 }
             } finally {
-                saveButton.textContent = "შენახვა";
+                saveButton.textContent = "გაზიარება";
                 saveButton.disabled = false;
             }
         };
@@ -248,29 +239,28 @@
         // ### ფრაგმენტის წაშლა ###
         const deleteSnippet = async (id) => {
             // NOTE: confirm() ფუნქცია არის დროებითი, ნამდვილ აპლიკაციაში უნდა შეიცვალოს მორგებული UI-ით.
-            if (!confirm("დარწმუნებული ხართ, რომ გსურთ ამ ფრაგმენტის წაშლა?")) {
+            if (!confirm("დარწმუნებული ხართ, რომ გსურთ ამ ფრაგმენტის წაშლა? (ეს მონაცემი საჯაროა და წაიშლება ყველასთვის!)")) {
                 return;
             }
             try {
-                const docPath = `artifacts/${appId}/users/${userId}/snippets/${id}`;
+                // ### წაშლა საჯარო კოლექციიდან ###
+                const docPath = `artifacts/${appId}/public/data/snippets/${id}`;
                 await deleteDoc(doc(db, docPath));
-                showModal("წარმატება", "ფრაგმენტი წაიშალა.");
+                showModal("წარმატება", "ფრაგმენტი წაიშალა საჯარო სიიდან.");
             } catch (error) {
                 console.error("წაშლის შეცდომა:", error);
                 if (error.code === "permission-denied") {
-                    showModal("წვდომა აკრძალულია (Permission Denied)", "ვერ მოხერხდა წაშლა. გთხოვთ, შეამოწმოთ Firestore-ის წესები.");
+                    showModal("წვდომა აკრძალულია (Permission Denied)", "ვერ მოხერხდა წაშლა. გთხოვთ, შეამოწმოთ **საჯარო** Firestore-ის წესები.");
                 } else {
                     showModal("წაშლის შეცდომა", `ფრაგმენტის წაშლა ვერ მოხერხდა: ${error.message}`);
                 }
             }
         };
 
-        // ### ტექსტის კოპირება ბუფერში ###
+        // ### ტექსტის კოპირება ბუფერში (იგივე ლოგიკა) ###
         const copyToClipboard = (text) => {
-            // გამოიყენება document.execCommand('copy') იმის გამო, რომ navigator.clipboard შეიძლება არ იმუშაოს iFrame-ში
             const textarea = document.createElement('textarea');
             textarea.value = text;
-            // დამალვა
             textarea.style.position = 'fixed';
             textarea.style.opacity = 0;
             document.body.appendChild(textarea);
@@ -286,15 +276,15 @@
                 }
             } catch (err) {
                 console.error('კოპირების შეცდომა: ', err);
-                showModal("შეცდომა", "კოპირება ვერ მოხერხდა. გთხოვთ, სცადოთ ტექსტის ხელით მონიშვნა/კოპირება.");
+                showModal("შეცდომა", "კოპირება ვერ მოხერხდა.");
             }
             
             document.body.removeChild(textarea);
         };
 
-        // ### ფრაგმენტების სიაში რენდერი ###
+        // ### ფრაგმენტების სიაში რენდერი (იგივე ლოგიკა) ###
         const renderSnippets = (snippets) => {
-            snippetsList.innerHTML = ''; // სიის გასუფთავება
+            snippetsList.innerHTML = '';
 
             if (snippets.length === 0) {
                 emptyStateEl.classList.remove('hidden');
@@ -306,17 +296,14 @@
                 const item = document.createElement('div');
                 item.className = 'flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-gray-50 border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition duration-150 ease-in-out';
                 
-                // ტექსტის კონტეინერი
                 const textContainer = document.createElement('p');
                 textContainer.className = 'text-gray-700 text-sm mb-3 sm:mb-0 sm:mr-4 flex-grow break-all';
-                textContainer.textContent = snippet.text.substring(0, 200) + (snippet.text.length > 200 ? '...' : ''); // შეზღუდული ჩვენება
-                textContainer.title = snippet.text; // სრული ტექსტი tooltip-ში
+                textContainer.textContent = snippet.text.substring(0, 200) + (snippet.text.length > 200 ? '...' : '');
+                textContainer.title = snippet.text;
                 
-                // ღილაკების კონტეინერი
                 const actionsContainer = document.createElement('div');
                 actionsContainer.className = 'flex space-x-2 flex-shrink-0';
                 
-                // კოპირების ღილაკი
                 const copyButton = document.createElement('button');
                 copyButton.className = 'bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg flex items-center text-sm transition duration-150 ease-in-out whitespace-nowrap';
                 copyButton.innerHTML = `
@@ -328,7 +315,6 @@
                 `;
                 copyButton.addEventListener('click', () => copyToClipboard(snippet.text));
 
-                // წაშლის ღილაკი
                 const deleteButton = document.createElement('button');
                 deleteButton.className = 'bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg flex items-center text-sm transition duration-150 ease-in-out whitespace-nowrap';
                 deleteButton.innerHTML = `
